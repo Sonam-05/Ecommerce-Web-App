@@ -48,7 +48,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Static folder for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static('/tmp'));
 
 // Mount routes
 app.use('/api/auth', authRoutes);
