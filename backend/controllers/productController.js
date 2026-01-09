@@ -244,7 +244,7 @@ export const uploadImages = async (req, res) => {
             });
         }
 
-        const imagePaths = req.files.map(file => `/tmp/${file.filename}`);
+        const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
 
         res.status(200).json({
             success: true,
