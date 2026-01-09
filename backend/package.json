@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "concurrently \"npm run start\" \"cd ../frontend && npm start\"",
+    "dev": "concurrently \"npm run start\" \"cd ../frontend && npm run dev\"",
     "server": "nodemon index.js"
   },
   "keywords": [
