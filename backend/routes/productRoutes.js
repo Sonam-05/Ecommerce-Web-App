@@ -17,7 +17,7 @@ import { enhancedMulter } from "enhanced-multer-file-uploader";
 const router = express.Router();
 
 const upload = enhancedMulter({
-  destination: "uploads", // Save files to 'public/assets'
+  destination: "/tmp", // Save files to 'public/assets'
   sizeLimitMB: 5, // 5mb limit
   allowedTypes: ["jpeg", "png", "gif", "webp", "jpg"], // Only allow specific types
   filenameParam: "random", // Use random filenames
