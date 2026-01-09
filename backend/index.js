@@ -34,7 +34,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS middleware
-app.use(cors());
+app.use(cors(
+    {
+        origin: ["https://sonam-ecommerce.vercel.app"],
+        methods: ["POST", "GET", "PUT", "DELETE"],
+        credentials: true
+    }
+));
 
 // Dev logging middleware
 if (process.env.NODE_ENV === 'development') {
@@ -71,6 +77,12 @@ app.use((err, req, res, next) => {
         message: err.message || 'Server Error'
     });
 });
+
+// static files
+app.use(express.static(path.join(__dirname, './frontend/build')))
+app.get('*', function (req, res) {
+    res.sendFile(path.join(__dirname, './frontend/build/index.html'))
+})
 
 const PORT = process.env.PORT || 5002;
 
