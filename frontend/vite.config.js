@@ -7,11 +7,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://sonam-ecommerce-backend',
+        target: 'http://sonam-ecommerce-backend.app',
         changeOrigin: true
       },
       '/uploads': {
-        target: 'http://sonam-ecommerce-backend',
+        target: 'http://sonam-ecommerce-backend.app',
         changeOrigin: true
       }
     }
