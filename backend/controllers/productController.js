@@ -244,7 +244,11 @@ export const uploadImages = async (req, res) => {
             });
         }
 
-        const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
+        const imagePaths = req.files.map(file => {
+            const b64 = Buffer.from(file.buffer).toString('base64');
+            const mimeType = file.mimetype;
+            return `data:${mimeType};base64,${b64}`;
+        });
 
         res.status(200).json({
             success: true,
