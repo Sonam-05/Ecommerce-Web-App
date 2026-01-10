@@ -1,27 +1,23 @@
 import express from 'express';
 import {
-    getProducts,
-    getProduct,
-    createProduct,
-    updateProduct,
-    deleteProduct,
-    addReview,
-    getSimilarProducts,
-    uploadImages
+  getProducts,
+  getProduct,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  addReview,
+  getSimilarProducts,
+  uploadImages
 } from '../controllers/productController.js';
 import { protect } from '../middleware/auth.js';
 import { admin } from '../middleware/admin.js';
 // import { upload } from '../middleware/upload.js';
-import { enhancedMulter } from "enhanced-multer-file-uploader";
+import multer from 'multer';
 
-const router = express.Router();
-
-const upload = enhancedMulter({
-  destination: "/tmp", // Save files to 'public/assets'
-  sizeLimitMB: 5, // 5mb limit
-  allowedTypes: ["jpeg", "png", "gif", "webp", "jpg"], // Only allow specific types
-  filenameParam: "random", // Use random filenames
-  fileLimit: 5, // Limit number of files (for array/fields)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
 // Upload route must come before :id routes
