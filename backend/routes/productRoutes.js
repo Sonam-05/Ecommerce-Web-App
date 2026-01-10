@@ -14,6 +14,8 @@ import { admin } from '../middleware/admin.js';
 // import { upload } from '../middleware/upload.js';
 import multer from 'multer';
 
+const router = express.Router();
+
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
