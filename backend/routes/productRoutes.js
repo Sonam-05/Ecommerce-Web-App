@@ -14,12 +14,13 @@ import { admin } from '../middleware/admin.js';
 // import { upload } from '../middleware/upload.js';
 import multer from 'multer';
 
+import { storage } from '../utils/cloudinary.js';
+
 const router = express.Router();
 
-const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit
 });
 
 // Upload route must come before :id routes
