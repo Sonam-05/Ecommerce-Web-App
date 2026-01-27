@@ -7,11 +7,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://sonam-ecommerce-frontend1.vercel.app',
+        target: 'http://sonam-ecommerce-frontend1.vercel.app',
         changeOrigin: true
       },
       '/uploads': {
-        target: 'https://sonam-ecommerce-frontend1.vercel.app',
+        target: 'http://sonam-ecommerce-frontend1.vercel.app',
         changeOrigin: true
       }
     }
