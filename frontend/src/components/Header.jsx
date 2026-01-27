@@ -22,11 +22,17 @@ const Header = () => {
     const { items } = useSelector((state) => state.cart);
 
     useEffect(() => {
-        // Only fetch notifications once when component mounts and user is logged in
         if (userInfo) {
             dispatch(fetchNotifications());
+
+            // Poll for new notifications every 10 seconds
+            const interval = setInterval(() => {
+                dispatch(fetchNotifications());
+            }, 10000);
+
+            return () => clearInterval(interval);
         }
-    }, [dispatch, userInfo?.token]); // Only depend on token, not entire userInfo
+    }, [dispatch, userInfo?.token]);
 
     // Debounced search
     useEffect(() => {

@@ -1,5 +1,6 @@
 import Product from '../models/Product.js';
 import Notification from '../models/Notification.js';
+import cloudinary from '../utils/cloudinary.js';
 
 // @desc    Get all products with filters
 // @route   GET /api/products
@@ -244,11 +245,23 @@ export const uploadImages = async (req, res) => {
             });
         }
 
-        const imagePaths = req.files.map(file => {
-            const b64 = Buffer.from(file.buffer).toString('base64');
-            const mimeType = file.mimetype;
-            return `data:${mimeType};base64,${b64}`;
+        const uploadPromises = req.files.map(file => {
+            return new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'ecommerce',
+                        resource_type: 'auto'
+                    },
+                    (error, result) => {
+                        if (error) return reject(error);
+                        resolve(result.secure_url);
+                    }
+                );
+                uploadStream.end(file.buffer);
+            });
         });
+
+        const imagePaths = await Promise.all(uploadPromises);
 
         res.status(200).json({
             success: true,

@@ -29,7 +29,7 @@ export const register = async (req, res) => {
             name,
             email,
             password,
-            role: role || 'customer'
+            role: 'customer'
         });
 
         const token = generateToken(user._id);

@@ -10,8 +10,7 @@ const RegisterPage = () => {
         name: '',
         email: '',
         password: '',
-        confirmPassword: '',
-        role: 'customer'
+        confirmPassword: ''
     });
     const [localError, setLocalError] = useState('');
 
@@ -109,18 +108,7 @@ const RegisterPage = () => {
                             />
                         </div>
 
-                        <div className="form-group">
-                            <label className="form-label">Account Type</label>
-                            <select
-                                name="role"
-                                className="form-select"
-                                value={formData.role}
-                                onChange={handleChange}
-                            >
-                                <option value="customer">Customer</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
+
 
                         <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
                             {loading ? 'Creating Account...' : 'Register'}

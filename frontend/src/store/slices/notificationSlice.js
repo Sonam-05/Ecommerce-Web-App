@@ -74,10 +74,10 @@ const notificationSlice = createSlice({
             .addCase(markAsRead.fulfilled, (state, action) => {
                 const index = state.notifications.findIndex(n => n._id === action.payload._id);
                 if (index !== -1) {
-                    state.notifications[index] = action.payload;
-                    if (!action.payload.isRead) {
+                    if (!state.notifications[index].isRead) {
                         state.unreadCount = Math.max(0, state.unreadCount - 1);
                     }
+                    state.notifications[index] = action.payload;
                 }
             })
             // Mark all as read
