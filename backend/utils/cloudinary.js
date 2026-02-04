@@ -1,10 +1,7 @@
+import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
-
-const storage = multer.memoryStorage();
-
-export { cloudinary, uploadToCloudinary, storage };
-
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 cloudinary.config({
@@ -13,6 +10,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const storage = multer.memoryStorage();
 
 const uploadToCloudinary = (buffer) => {
     return new Promise((resolve, reject) => {
@@ -30,4 +28,4 @@ const uploadToCloudinary = (buffer) => {
     });
 };
 
-export { cloudinary, uploadToCloudinary };
+export { cloudinary, uploadToCloudinary, storage };
