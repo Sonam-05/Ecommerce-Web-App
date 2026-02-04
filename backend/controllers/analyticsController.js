@@ -25,12 +25,34 @@ export const getSalesAnalytics = async (req, res) => {
                 startDate.setMonth(startDate.getMonth() - 1); // Default to month
         }
 
-        const orders = await Order.find({
-            createdAt: { $gte: startDate }
-        });
+        // Optimized Aggregation Pipeline
+        const stats = await Order.aggregate([
+            { $match: { createdAt: { $gte: startDate } } },
+            {
+                $facet: {
+                    totalStats: [
+                        { $group: { _id: null, totalSales: { $sum: '$totalPrice' }, totalOrders: { $sum: 1 } } }
+                    ],
+                    statusBreakdown: [
+                        { $group: { _id: '$orderStatus', count: { $sum: 1 } } }
+                    ],
+                    salesByDate: [
+                        {
+                            $group: {
+                                _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                                sales: { $sum: '$totalPrice' },
+                                orders: { $sum: 1 }
+                            }
+                        },
+                        { $sort: { _id: 1 } }
+                    ]
+                }
+            }
+        ]);
 
-        const totalSales = orders.reduce((sum, order) => sum + order.totalPrice, 0);
-        const totalOrders = orders.length;
+        const result = stats[0];
+        const totalSales = result.totalStats[0]?.totalSales || 0;
+        const totalOrders = result.totalStats[0]?.totalOrders || 0;
 
         const statusBreakdown = {
             Ordered: 0,
@@ -38,23 +60,15 @@ export const getSalesAnalytics = async (req, res) => {
             'Out for Delivery': 0,
             Delivered: 0
         };
-
-        // yippi - delivered, lays - ordered, pencil - shipped, box - delivered
-        // 10                 12                10              15
-        orders.forEach(order => {
-            statusBreakdown[order.orderStatus]++;
+        result.statusBreakdown.forEach(s => {
+            if (statusBreakdown.hasOwnProperty(s._id)) {
+                statusBreakdown[s._id] = s.count;
+            }
         });
 
-        // Calculate daily sales for chart
         const salesByDate = {};
-
-        orders.forEach(order => {
-            const date = order.createdAt.toISOString().split('T')[0];
-            if (!salesByDate[date]) {
-                salesByDate[date] = { sales: 0, orders: 0 };
-            }
-            salesByDate[date].sales += order.totalPrice;
-            salesByDate[date].orders++;
+        result.salesByDate.forEach(item => {
+            salesByDate[item._id] = { sales: item.sales, orders: item.orders };
         });
 
         res.status(200).json({
@@ -81,26 +95,35 @@ export const getSalesAnalytics = async (req, res) => {
 // @access  Private/Admin
 export const getDashboardStats = async (req, res) => {
     try {
-        const totalOrders = await Order.countDocuments();
-        const pendingOrders = await Order.countDocuments({ orderStatus: 'Ordered' });
-        const deliveredOrders = await Order.countDocuments({ orderStatus: 'Delivered' });
+        // Run aggregation and recent orders fetch in parallel
+        const [stats, recentOrders] = await Promise.all([
+            Order.aggregate([
+                {
+                    $facet: {
+                        totalOrders: [{ $count: 'count' }],
+                        pendingOrders: [{ $match: { orderStatus: 'Ordered' } }, { $count: 'count' }],
+                        deliveredOrders: [{ $match: { orderStatus: 'Delivered' } }, { $count: 'count' }],
+                        totalRevenue: [{ $group: { _id: null, total: { $sum: '$totalPrice' } } }]
+                    }
+                }
+            ]),
+            Order.find()
+                .select('user totalPrice orderStatus createdAt')
+                .populate('user', 'name email')
+                .sort({ createdAt: -1 })
+                .limit(5)
+                .lean()
+        ]);
 
-        const allOrders = await Order.find();
-        const totalRevenue = allOrders.reduce((sum, order) => sum + order.totalPrice, 0);
-
-        // Get recent orders
-        const recentOrders = await Order.find()
-            .populate('user', 'name email')
-            .sort({ createdAt: -1 })
-            .limit(5);
+        const data = stats[0];
 
         res.status(200).json({
             success: true,
             data: {
-                totalOrders,
-                pendingOrders,
-                deliveredOrders,
-                totalRevenue,
+                totalOrders: data.totalOrders[0]?.count || 0,
+                pendingOrders: data.pendingOrders[0]?.count || 0,
+                deliveredOrders: data.deliveredOrders[0]?.count || 0,
+                totalRevenue: data.totalRevenue[0]?.total || 0,
                 recentOrders
             }
         });

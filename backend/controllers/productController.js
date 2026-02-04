@@ -1,22 +1,38 @@
 import Product from '../models/Product.js';
 import Notification from '../models/Notification.js';
+import Cart from '../models/Cart.js';
+import { uploadToCloudinary } from '../utils/cloudinary.js';
 
 // @desc    Get all products with filters
 // @route   GET /api/products
 // @access  Public
 export const getProducts = async (req, res) => {
     try {
-        const { category, featured, latest, search } = req.query;
+        const {
+            category,
+            featured,
+            search,
+            page = 1,
+            limit = 10,  // Changed default to 10
+            minPrice,
+            maxPrice,
+            rating,
+            sort
+        } = req.query;
+
         let query = {};
 
+        // Category Filter
         if (category) {
             query.category = category;
         }
 
+        // Featured Filter
         if (featured === 'true') {
             query.isFeatured = true;
         }
 
+        // Search Filter
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },
@@ -24,18 +40,60 @@ export const getProducts = async (req, res) => {
             ];
         }
 
-        let products = Product.find(query).populate('category', 'name');
-
-        if (latest === 'true') {
-            products = products.sort({ createdAt: -1 }).limit(10);
+        // Price Filter
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = Number(minPrice);
+            if (maxPrice) query.price.$lte = Number(maxPrice);
         }
 
-        const result = await products;
+        // Rating Filter
+        if (rating) {
+            query.rating = { $gte: Number(rating) };
+        }
+
+        // Pagination calculations
+        const pageNum = parseInt(page);
+        const limitNum = parseInt(limit);
+        const skip = (pageNum - 1) * limitNum;
+
+        let productsQuery = Product.find(query).populate('category', 'name');
+
+        // Sorting
+        let sortOption = { createdAt: -1 }; // Default: Latest
+        if (sort) {
+            switch (sort) {
+                case 'price_asc':
+                    sortOption = { price: 1 };
+                    break;
+                case 'price_desc':
+                    sortOption = { price: -1 };
+                    break;
+                case 'oldest':
+                    sortOption = { createdAt: 1 };
+                    break;
+                case 'latest':
+                    sortOption = { createdAt: -1 };
+                    break;
+                default:
+                    sortOption = { createdAt: -1 };
+            }
+        }
+        productsQuery = productsQuery.sort(sortOption);
+
+        // Apply pagination
+        const products = await productsQuery.skip(skip).limit(limitNum);
+
+        // Get total count for pagination
+        const total = await Product.countDocuments(query);
 
         res.status(200).json({
             success: true,
-            count: result.length,
-            data: result
+            count: products.length,
+            total,
+            page: pageNum,
+            pages: Math.ceil(total / limitNum),
+            data: products
         });
     } catch (error) {
         res.status(500).json({
@@ -136,6 +194,12 @@ export const deleteProduct = async (req, res) => {
             });
         }
 
+        // Remove product from all carts
+        await Cart.updateMany(
+            { 'items.product': req.params.id },
+            { $pull: { items: { product: req.params.id } } }
+        );
+
         res.status(200).json({
             success: true,
             message: 'Product deleted successfully'
@@ -232,6 +296,7 @@ export const getSimilarProducts = async (req, res) => {
     }
 };
 
+
 // @desc    Upload product images
 // @route   POST /api/products/upload
 // @access  Private/Admin
@@ -244,7 +309,9 @@ export const uploadImages = async (req, res) => {
             });
         }
 
-        const imagePaths = req.files.map(file => file.path);
+        const uploadPromises = req.files.map(file => uploadToCloudinary(file.buffer));
+        const results = await Promise.all(uploadPromises);
+        const imagePaths = results.map(result => result.secure_url);
 
         res.status(200).json({
             success: true,

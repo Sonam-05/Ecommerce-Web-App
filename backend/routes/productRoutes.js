@@ -14,12 +14,11 @@ import { admin } from '../middleware/admin.js';
 // import { upload } from '../middleware/upload.js';
 import multer from 'multer';
 
-import { storage } from '../utils/cloudinary.js';
 
 const router = express.Router();
 
 const upload = multer({
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit
 });
 

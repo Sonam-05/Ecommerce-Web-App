@@ -18,9 +18,18 @@ export const createOrder = async (req, res) => {
             });
         }
 
+        // Fetch all products in one query instead of loop
+        const productIds = items.map(item => item.product);
+        const products = await Product.find({ _id: { $in: productIds } })
+            .select('_id name stock')
+            .lean();
+
+        // Create a map for quick lookup
+        const productMap = new Map(products.map(p => [p._id.toString(), p]));
+
         // Verify stock availability
         for (const item of items) {
-            const product = await Product.findById(item.product);
+            const product = productMap.get(item.product.toString());
             if (!product) {
                 return res.status(404).json({
                     success: false,
@@ -35,6 +44,7 @@ export const createOrder = async (req, res) => {
             }
         }
 
+        // Create order
         const order = await Order.create({
             user: req.user._id,
             items,
@@ -43,37 +53,42 @@ export const createOrder = async (req, res) => {
             paymentMethod: 'COD'
         });
 
-        // Update product stock
-        for (const item of items) {
-            await Product.findByIdAndUpdate(item.product, {
-                $inc: { stock: -item.quantity }
-            });
-        }
+        // Prepare bulk operations for stock update
+        const bulkOps = items.map(item => ({
+            updateOne: {
+                filter: { _id: item.product },
+                update: { $inc: { stock: -item.quantity } }
+            }
+        }));
 
-        // Clear user's cart
-        await Cart.findOneAndUpdate(
-            { user: req.user._id },
-            { items: [] }
-        );
+        // Get admins for notifications
+        const adminsPromise = User.find({ role: 'admin' }).select('_id').lean();
 
-        // Create notification for user
-        await Notification.create({
-            user: req.user._id,
-            message: `Your order #${order._id.toString().slice(-6)} has been placed successfully`,
-            type: 'order',
-            relatedId: order._id
-        });
+        // Execute all operations in parallel
+        const [, admins] = await Promise.all([
+            Product.bulkWrite(bulkOps), // Bulk update stock
+            adminsPromise,
+            Cart.findOneAndUpdate({ user: req.user._id }, { items: [] }) // Clear cart
+        ]);
 
-        // Create notification for admin
-        const admins = await User.find({ role: 'admin' });
-        for (const admin of admins) {
-            await Notification.create({
+        // Prepare notifications for bulk insert
+        const notifications = [
+            {
+                user: req.user._id,
+                message: `Your order #${order._id.toString().slice(-6)} has been placed successfully`,
+                type: 'order',
+                relatedId: order._id
+            },
+            ...admins.map(admin => ({
                 user: admin._id,
                 message: `New order #${order._id.toString().slice(-6)} received from ${req.user.name}`,
                 type: 'order',
                 relatedId: order._id
-            });
-        }
+            }))
+        ];
+
+        // Insert all notifications at once
+        await Notification.insertMany(notifications);
 
         res.status(201).json({
             success: true,
@@ -92,10 +107,20 @@ export const createOrder = async (req, res) => {
 // @access  Private
 export const getUserOrders = async (req, res) => {
     try {
-        const orders = await Order.find({ user: req.user._id })
-            .populate('items.product', 'name')
-            .sort({ createdAt: -1 });
+        console.log("called 1")
+        const status = req.query.status; // Optional status filter
 
+        // Build query
+        const query = { user: req.user._id };
+        if (status) {
+            query.orderStatus = status;
+        }
+
+        // Simplified query for maximum performance
+        const orders = await Order.find(query)
+            .sort({ createdAt: -1 })
+            .lean();
+        console.log("called 2")
         res.status(200).json({
             success: true,
             count: orders.length,
@@ -115,8 +140,10 @@ export const getUserOrders = async (req, res) => {
 export const getOrder = async (req, res) => {
     try {
         const order = await Order.findById(req.params.id)
+            .select('user items shippingAddress totalPrice orderStatus deliveredAt createdAt')
             .populate('user', 'name email')
-            .populate('items.product', 'name');
+            .populate('items.product', 'name images price')
+            .lean();
 
         if (!order) {
             return res.status(404).json({
@@ -150,14 +177,36 @@ export const getOrder = async (req, res) => {
 // @access  Private/Admin
 export const getAllOrders = async (req, res) => {
     try {
-        const orders = await Order.find()
-            .populate('user', 'name email')
-            .populate('items.product', 'name')
-            .sort({ createdAt: -1 });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        const status = req.query.status; // Optional status filter
+
+        // Build query
+        const query = {};
+        if (status) {
+            query.orderStatus = status;
+        }
+
+        // Execute queries in parallel
+        const [orders, total] = await Promise.all([
+            Order.find(query)
+                .select('user items totalPrice orderStatus createdAt deliveredAt')
+                .populate('user', 'name email')
+                .populate('items.product', 'name')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            Order.countDocuments(query)
+        ]);
 
         res.status(200).json({
             success: true,
             count: orders.length,
+            total,
+            page,
+            pages: Math.ceil(total / limit),
             data: orders
         });
     } catch (error) {

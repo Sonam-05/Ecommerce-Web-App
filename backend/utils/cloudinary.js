@@ -1,4 +1,8 @@
-import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
+
+const storage = multer.memoryStorage();
+
+export { cloudinary, uploadToCloudinary, storage };
 
 import dotenv from 'dotenv';
 dotenv.config();

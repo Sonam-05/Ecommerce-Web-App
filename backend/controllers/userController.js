@@ -112,7 +112,7 @@ export const updateAddress = async (req, res) => {
             });
         }
 
-        const address = user.addresses.findById(req.params.id);
+        const address = user.addresses.id(req.params.id);
         if (!address) {
             return res.status(404).json({
                 success: false,
