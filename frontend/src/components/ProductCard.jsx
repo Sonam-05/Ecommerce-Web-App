@@ -41,7 +41,10 @@ const ProductCard = ({ product }) => {
                 <img
                     src={product.images?.[0] || '/placeholder.png'}
                     alt={product.name}
-                    onError={(e) => e.target.src = '/placeholder.png'}
+                    onError={(e) => {
+                        e.target.onerror = null; // Prevent infinite loop
+                        e.target.src = '/placeholder.png';
+                    }}
                 />
                 {product.isFeatured && <span className="featured-badge">Featured</span>}
                 {product.stock === 0 && <span className="stock-badge">Out of Stock</span>}

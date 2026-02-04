@@ -72,6 +72,13 @@ const productSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Indexes for performance
+productSchema.index({ name: 'text', description: 'text' }); // For search functionality
+productSchema.index({ category: 1 });                       // For filtering by category
+productSchema.index({ price: 1 });                          // For sorting by price
+productSchema.index({ createdAt: -1 });                     // For sorting by newest
+productSchema.index({ isFeatured: 1 });                     // For filtering featured products
+
 const Product = mongoose.model('Product', productSchema);
 
 export default Product;

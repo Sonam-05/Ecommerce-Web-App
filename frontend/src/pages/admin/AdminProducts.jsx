@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from '../../store/slices/productSlice';
 import { fetchCategories } from '../../store/slices/categorySlice';
@@ -17,12 +17,15 @@ const AdminProducts = () => {
         category: '',
         stock: '',
         isFeatured: false,
-        images: []
     });
     const [editingId, setEditingId] = useState(null);
-    const [imageFiles, setImageFiles] = useState([]);
-    const [imagePreview, setImagePreview] = useState([]);
+
+    // Manage existing images (URLs) and new images (Files) separately
+    const [existingImages, setExistingImages] = useState([]);
+    const [newImageFiles, setNewImageFiles] = useState([]);
+
     const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef(null);
 
     useEffect(() => {
         dispatch(fetchProducts());
@@ -31,38 +34,36 @@ const AdminProducts = () => {
 
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
-        setImageFiles(files);
-
-        // Create preview URLs
-        const previews = files.map(file => URL.createObjectURL(file));
-        setImagePreview(previews);
+        // Append new files to the existing list of new files
+        setNewImageFiles(prev => [...prev, ...files]);
     };
 
-    const uploadImages = async () => {
-        if (imageFiles.length === 0) {
-            console.log('No image files selected');
-            return [];
-        }
+    const handleRemoveExistingImage = (indexToRemove) => {
+        setExistingImages(prev => prev.filter((_, index) => index !== indexToRemove));
+    };
 
-        console.log('Starting image upload, files:', imageFiles);
+    const handleRemoveNewImage = (indexToRemove) => {
+        setNewImageFiles(prev => prev.filter((_, index) => index !== indexToRemove));
+    };
+
+    const uploadImages = async (filesToUpload) => {
+        if (filesToUpload.length === 0) return [];
+
+        console.log('Starting image upload, files:', filesToUpload);
         setUploading(true);
-        const formData = new FormData();
-        imageFiles.forEach(file => {
-            console.log('Appending file:', file.name);
-            formData.append('images', file);
+        const uploadFormData = new FormData();
+        filesToUpload.forEach(file => {
+            uploadFormData.append('images', file);
         });
 
         try {
-            console.log('Sending upload request to /api/products/upload');
-            const { data } = await api.post('/products/upload', formData, {
+            const { data } = await api.post('/products/upload', uploadFormData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            console.log('Upload response:', data);
             setUploading(false);
             return data.data; // Array of image paths
         } catch (error) {
             console.error('Image upload error:', error);
-            console.error('Error response:', error.response?.data);
             setUploading(false);
             return [];
         }
@@ -71,22 +72,19 @@ const AdminProducts = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        let imagePaths = formData.images || [];
-
-        // Upload new images if selected
-        if (imageFiles.length > 0) {
-            console.log('Uploading images...', imageFiles.length);
-            const uploadedPaths = await uploadImages();
-            console.log('Uploaded image paths:', uploadedPaths);
-            imagePaths = [...imagePaths, ...uploadedPaths];
+        // 1. Upload new images
+        let uploadedUrls = [];
+        if (newImageFiles.length > 0) {
+            uploadedUrls = await uploadImages(newImageFiles);
         }
+
+        // 2. Combine with existing preserved images
+        const finalImages = [...existingImages, ...uploadedUrls];
 
         const productData = {
             ...formData,
-            images: imagePaths
+            images: finalImages
         };
-
-        console.log('Product data being sent:', productData);
 
         if (editingId) {
             dispatch(updateProduct({ id: editingId, productData }));
@@ -95,9 +93,15 @@ const AdminProducts = () => {
             dispatch(createProduct(productData));
         }
 
-        setFormData({ name: '', description: '', price: '', category: '', stock: '', isFeatured: false, images: [] });
-        setImageFiles([]);
-        setImagePreview([]);
+        // Reset form
+        setFormData({ name: '', description: '', price: '', category: '', stock: '', isFeatured: false });
+        setExistingImages([]);
+        setNewImageFiles([]);
+
+        // Reset the file input element to clear displayed file names
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     };
 
     const handleEdit = (product) => {
@@ -107,11 +111,11 @@ const AdminProducts = () => {
             price: product.price,
             category: product.category._id || product.category,
             stock: product.stock,
-            isFeatured: product.isFeatured,
-            images: product.images || []
+            isFeatured: product.isFeatured
         });
+        setExistingImages(product.images || []);
+        setNewImageFiles([]); // Clear any scratchpad files
         setEditingId(product._id);
-        setImagePreview(product.images || []);
     };
 
     const handleDelete = (id) => {
@@ -160,19 +164,46 @@ const AdminProducts = () => {
                             <div className="form-group">
                                 <label>Product Images</label>
                                 <input
+                                    ref={fileInputRef}
                                     type="file"
                                     className="form-input"
                                     accept="image/*"
                                     multiple
                                     onChange={handleImageChange}
                                 />
-                                {imagePreview.length > 0 && (
-                                    <div className="image-preview-grid">
-                                        {imagePreview.map((preview, idx) => (
-                                            <img key={idx} src={preview} alt={`Preview ${idx + 1} `} className="image-preview" />
-                                        ))}
-                                    </div>
-                                )}
+                                <div className="image-preview-grid">
+                                    {/* Existing Images */}
+                                    {existingImages.map((imgUrl, idx) => (
+                                        <div key={`existing-${idx}`} className="image-preview-wrapper">
+                                            <img src={imgUrl} alt={`Existing ${idx}`} className="image-preview" />
+                                            <button
+                                                type="button"
+                                                className="btn-remove-image"
+                                                onClick={() => handleRemoveExistingImage(idx)}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    {/* New Images */}
+                                    {newImageFiles.map((file, idx) => (
+                                        <div key={`new-${idx}`} className="image-preview-wrapper">
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={`New ${idx}`}
+                                                className="image-preview"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="btn-remove-image"
+                                                onClick={() => handleRemoveNewImage(idx)}
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="form-group">
@@ -188,9 +219,12 @@ const AdminProducts = () => {
                                 {editingId && (
                                     <button type="button" className="btn btn-outline" onClick={() => {
                                         setEditingId(null);
-                                        setFormData({ name: '', description: '', price: '', category: '', stock: '', isFeatured: false, images: [] });
-                                        setImageFiles([]);
-                                        setImagePreview([]);
+                                        setFormData({ name: '', description: '', price: '', category: '', stock: '', isFeatured: false });
+                                        setExistingImages([]);
+                                        setNewImageFiles([]);
+                                        if (fileInputRef.current) {
+                                            fileInputRef.current.value = '';
+                                        }
                                     }}>Cancel</button>
                                 )}
                             </div>
@@ -203,7 +237,7 @@ const AdminProducts = () => {
                             {products.map((product) => (
                                 <div key={product._id} className="item-card">
                                     <div>
-                                        <h3>{product.name}</h3>
+                                        <h3 title={product.name}>{product.name}</h3>
                                         <p>₹{product.price} | Stock: {product.stock}</p>
                                     </div>
                                     <div className="item-actions">

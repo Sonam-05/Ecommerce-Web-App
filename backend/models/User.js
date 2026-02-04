@@ -61,6 +61,9 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
+// Indexes for performance
+userSchema.index({ role: 1 }); // For finding admins quickly
+
 const User = mongoose.model('User', userSchema);
 
 export default User;

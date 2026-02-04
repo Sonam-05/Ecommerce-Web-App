@@ -1,15 +1,23 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUserOrders } from '../store/slices/orderSlice';
+import Loader from '../components/Loader';
 import './OrdersPage.css';
 
 const OrdersPage = () => {
     const dispatch = useDispatch();
     const { orders, loading } = useSelector((state) => state.orders);
 
+    const [statusFilter, setStatusFilter] = React.useState('');
+
     useEffect(() => {
         dispatch(fetchUserOrders());
     }, [dispatch]);
+
+    // Client-side filtering
+    const filteredOrders = orders.filter(order =>
+        statusFilter === '' || order.orderStatus === statusFilter
+    );
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -20,20 +28,43 @@ const OrdersPage = () => {
         }
     };
 
+    const statuses = ['All', 'Ordered', 'Shipped', 'Out for Delivery', 'Delivered'];
+
     return (
         <div className="orders-page">
             <div className="container">
-                <h1>My Orders</h1>
+                <div className="orders-header-section">
+                    <h1>My Orders</h1>
+                    <div className="status-filter">
+                        {statuses.map((status) => (
+                            <button
+                                key={status}
+                                className={`filter-btn ${statusFilter === (status === 'All' ? '' : status) ? 'active' : ''}`}
+                                onClick={() => setStatusFilter(status === 'All' ? '' : status)}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
                 {loading ? (
-                    <p>Loading...</p>
-                ) : orders.length === 0 ? (
+                    <Loader variant="gradient" message="Fetching your orders..." />
+                ) : filteredOrders.length === 0 ? (
                     <div className="empty-orders">
-                        <p>No orders yet</p>
+                        <p>No orders found matching "{statusFilter || 'All'}"</p>
+                        {statusFilter && (
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => setStatusFilter('')}
+                            >
+                                Clear Filter
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="orders-list">
-                        {orders.map((order) => (
+                        {filteredOrders.map((order) => (
                             <div key={order._id} className="order-card">
                                 <div className="order-header">
                                     <div>

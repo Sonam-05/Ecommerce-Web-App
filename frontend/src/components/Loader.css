@@ -1,13 +1,443 @@
+/* ===================================
+   LOADER CONTAINER
+   =================================== */
+
 .loader-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 200px;
-    gap: 1rem;
+    padding: 2rem;
+    width: 100%;
 }
 
-.loader-container p {
+.loader-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    min-height: 100vh;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.loader-message {
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* ===================================
+   DEFAULT LOADER (8-Blade Spinner)
+   =================================== */
+
+.loader-default {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.default-spinner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    animation: rotate 1.2s linear infinite;
+}
+
+.spinner-blade {
+    position: absolute;
+    width: 8%;
+    height: 24%;
+    background: linear-gradient(180deg, #6366f1, #ec4899);
+    border-radius: 50px;
+    left: 46%;
+    top: 38%;
+    transform-origin: 50% 50%;
+    animation: fade 1.2s linear infinite;
+}
+
+.spinner-blade:nth-child(1) {
+    transform: rotate(0deg) translate(0, -140%);
+    animation-delay: 0s;
+}
+
+.spinner-blade:nth-child(2) {
+    transform: rotate(45deg) translate(0, -140%);
+    animation-delay: -0.15s;
+}
+
+.spinner-blade:nth-child(3) {
+    transform: rotate(90deg) translate(0, -140%);
+    animation-delay: -0.3s;
+}
+
+.spinner-blade:nth-child(4) {
+    transform: rotate(135deg) translate(0, -140%);
+    animation-delay: -0.45s;
+}
+
+.spinner-blade:nth-child(5) {
+    transform: rotate(180deg) translate(0, -140%);
+    animation-delay: -0.6s;
+}
+
+.spinner-blade:nth-child(6) {
+    transform: rotate(225deg) translate(0, -140%);
+    animation-delay: -0.75s;
+}
+
+.spinner-blade:nth-child(7) {
+    transform: rotate(270deg) translate(0, -140%);
+    animation-delay: -0.9s;
+}
+
+.spinner-blade:nth-child(8) {
+    transform: rotate(315deg) translate(0, -140%);
+    animation-delay: -1.05s;
+}
+
+/* ===================================
+   DOTS LOADER
+   =================================== */
+
+.loader-dots {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    animation: bounce 1.4s ease-in-out infinite;
+}
+
+.dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* ===================================
+   SPINNER LOADER (Triple Ring)
+   =================================== */
+
+.loader-spinner {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.spinner-ring {
+    position: absolute;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+.spinner-ring:nth-child(1) {
+    width: 100%;
+    height: 100%;
+    border-top-color: #6366f1;
+    animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+    width: 75%;
+    height: 75%;
+    top: 12.5%;
+    left: 12.5%;
+    border-top-color: #8b5cf6;
+    animation-delay: -0.5s;
+}
+
+.spinner-ring:nth-child(3) {
+    width: 50%;
+    height: 50%;
+    top: 25%;
+    left: 25%;
+    border-top-color: #ec4899;
+    animation-delay: -1s;
+}
+
+/* ===================================
+   PULSE LOADER
+   =================================== */
+
+.loader-pulse {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.pulse-circle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    animation: pulse-scale 1.5s ease-in-out infinite;
+}
+
+.pulse-circle::before,
+.pulse-circle::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #ec4899);
+    opacity: 0.6;
+    animation: pulse-scale 1.5s ease-in-out infinite;
+}
+
+.pulse-circle::before {
+    animation-delay: -0.5s;
+}
+
+.pulse-circle::after {
+    animation-delay: -1s;
+}
+
+/* ===================================
+   BARS LOADER
+   =================================== */
+
+.loader-bars {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    height: 50px;
+}
+
+.bar {
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(180deg, #6366f1, #ec4899);
+    border-radius: 3px;
+    animation: bar-stretch 1.2s ease-in-out infinite;
+}
+
+.bar:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.bar:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.bar:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.bar:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.bar:nth-child(5) {
+    animation-delay: 0.4s;
+}
+
+/* ===================================
+   GRADIENT LOADER
+   =================================== */
+
+.loader-gradient {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.gradient-spinner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg,
+            #6366f1 0deg,
+            #8b5cf6 90deg,
+            #ec4899 180deg,
+            #f472b6 270deg,
+            #6366f1 360deg);
+    animation: rotate 1.5s linear infinite;
+    position: relative;
+}
+
+.gradient-spinner::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 75%;
+    height: 75%;
+    background: white;
+    border-radius: 50%;
+}
+
+/* ===================================
+   ANIMATIONS
+   =================================== */
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fade {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.25;
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    40% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes pulse-scale {
+
+    0%,
+    100% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes bar-stretch {
+
+    0%,
+    100% {
+        transform: scaleY(0.4);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ===================================
+   RESPONSIVE DESIGN
+   =================================== */
+
+@media (max-width: 768px) {
+    .loader-container {
+        min-height: 150px;
+        padding: 1.5rem;
+    }
+
+    .loader-default,
+    .loader-spinner,
+    .loader-pulse,
+    .loader-gradient {
+        width: 50px;
+        height: 50px;
+    }
+
+    .loader-bars {
+        height: 40px;
+    }
+
+    .dot {
+        width: 14px;
+        height: 14px;
+    }
+
+    .loader-message {
+        font-size: 0.875rem;
+    }
+}
+
+/* ===================================
+   DARK MODE SUPPORT
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+    .loader-fullscreen {
+        background: rgba(17, 24, 39, 0.95);
+    }
+
+    .gradient-spinner::before {
+        background: #1f2937;
+    }
 }

@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllOrders, updateOrderStatus } from '../../store/slices/orderSlice';
+import Loader from '../../components/Loader';
 import './AdminPages.css';
 
 const AdminOrders = () => {
@@ -21,7 +22,7 @@ const AdminOrders = () => {
                 <h1>Order Management</h1>
 
                 {loading ? (
-                    <p>Loading...</p>
+                    <Loader variant="bars" message="Loading orders..." />
                 ) : (
                     <div className="orders-list">
                         {allOrders.map((order) => (

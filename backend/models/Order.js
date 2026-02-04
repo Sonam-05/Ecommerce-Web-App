@@ -57,8 +57,16 @@ const orderSchema = new mongoose.Schema({
         type: Date
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    id: false, // Disable virtual 'id' for performance
+    versionKey: false // Disable '__v' for performance and space saving
 });
+
+// Indexes for performance
+orderSchema.index({ user: 1, createdAt: -1 }); // For fetching user order history sorted by date
+orderSchema.index({ user: 1, orderStatus: 1, createdAt: -1 }); // For filtering by status and sorting
+orderSchema.index({ createdAt: -1 }); // For admin fetching all orders sorted by date
+orderSchema.index({ orderStatus: 1, createdAt: -1 }); // For filtering by status
 
 const Order = mongoose.model('Order', orderSchema);
 

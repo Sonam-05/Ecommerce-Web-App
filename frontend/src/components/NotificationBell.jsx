@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { markAsRead, markAllAsRead } from '../store/slices/notificationSlice';
 import './NotificationBell.css';
@@ -7,6 +7,7 @@ const NotificationBell = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const dispatch = useDispatch();
     const { notifications, unreadCount } = useSelector((state) => state.notifications);
+    const dropdownRef = useRef(null);
 
     const handleMarkAsRead = (id) => {
         dispatch(markAsRead(id));
@@ -15,6 +16,23 @@ const NotificationBell = () => {
     const handleMarkAllAsRead = () => {
         dispatch(markAllAsRead());
     };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+
+        if (showDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showDropdown]);
 
     const formatTime = (date) => {
         const now = new Date();
@@ -28,7 +46,7 @@ const NotificationBell = () => {
     };
 
     return (
-        <div className="notification-bell">
+        <div className="notification-bell" ref={dropdownRef}>
             <button
                 className="bell-button"
                 onClick={() => setShowDropdown(!showDropdown)}

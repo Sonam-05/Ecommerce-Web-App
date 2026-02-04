@@ -9,11 +9,7 @@
     margin-bottom: 4rem;
 }
 
-.product-images img {
-    width: 100%;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-}
+/* .product-images img style removed to avoid conflict with ProductImageGallery */
 
 .product-details h1 {
     font-size: 2.5rem;

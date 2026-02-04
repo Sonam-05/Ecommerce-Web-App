@@ -30,16 +30,62 @@
 
 .address-card {
     background: var(--bg-secondary);
-    padding: 1rem;
+    padding: 3.5rem 1rem 3rem 1rem;
     border-radius: var(--radius-md);
     border: 1px solid var(--border);
     position: relative;
 }
 
-.btn-delete {
+.default-badge {
     position: absolute;
     top: 1rem;
+    left: 1rem;
+    background: var(--primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.address-actions {
+    position: absolute;
+    bottom: 1rem;
     right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-set-default {
+    background: var(--bg-card);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.btn-set-default:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-edit {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.btn-edit:hover {
+    opacity: 0.9;
+}
+
+.btn-delete {
     background: var(--error);
     color: white;
     border: none;
@@ -53,6 +99,15 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+}
+
+.profile-section .form-group {
+    margin-bottom: 1rem;
+}
+
+.profile-section form>.form-group:last-of-type,
+.profile-section form>.form-row:last-of-type {
+    margin-bottom: 0;
 }
 
 @media (max-width: 768px) {

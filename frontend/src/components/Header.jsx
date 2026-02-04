@@ -18,6 +18,18 @@ const Header = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
+    // Prevent body scroll when mobile menu is open
+    useEffect(() => {
+        if (menuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [menuOpen]);
+
     const { userInfo } = useSelector((state) => state.auth);
     const { items } = useSelector((state) => state.cart);
 
@@ -25,10 +37,12 @@ const Header = () => {
         if (userInfo) {
             dispatch(fetchNotifications());
 
-            // Poll for new notifications every 10 seconds
+            // Poll for new notifications every 60 seconds, only if tab is visible
             const interval = setInterval(() => {
-                dispatch(fetchNotifications());
-            }, 10000);
+                if (!document.hidden) {
+                    dispatch(fetchNotifications());
+                }
+            }, 60000);
 
             return () => clearInterval(interval);
         }
@@ -134,26 +148,47 @@ const Header = () => {
                     </div>
 
                     <nav className={`nav ${menuOpen ? 'nav-open' : ''}`}>
-                        <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
-                        <Link to="/cart" onClick={() => setMenuOpen(false)}>Cart</Link>
-                        <Link to="/wishlist" onClick={() => setMenuOpen(false)}>Wishlist</Link>
-                        {userInfo && <Link to="/orders" onClick={() => setMenuOpen(false)}>Orders</Link>}
-                        {userInfo?.role === 'admin' && (
-                            <div className="admin-nav-menu">
-                                <button className="admin-nav-button">
-                                    Admin
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-                                <div className="admin-nav-dropdown">
-                                    <Link to="/admin/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-                                    <Link to="/admin/categories" onClick={() => setMenuOpen(false)}>Categories</Link>
-                                    <Link to="/admin/products" onClick={() => setMenuOpen(false)}>Products</Link>
-                                    <Link to="/admin/orders" onClick={() => setMenuOpen(false)}>Orders</Link>
+                        <div className="mobile-nav-header">
+                            <Link to="/" className="logo" onClick={() => setMenuOpen(false)}>
+                                <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                                    <rect width="32" height="32" rx="8" fill="url(#gradient-nav)" />
+                                    <path d="M16 8L20 12H18V20H14V12H12L16 8Z" fill="white" />
+                                    <defs>
+                                        <linearGradient id="gradient-nav" x1="0" y1="0" x2="32" y2="32">
+                                            <stop stopColor="#6366f1" />
+                                            <stop offset="1" stopColor="#ec4899" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <span>E-Shop</span>
+                            </Link>
+                            <button className="close-btn" onClick={() => setMenuOpen(false)}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="nav-links">
+                            <Link to="/" onClick={() => setMenuOpen(false)}>Home</Link>
+                            <Link to="/wishlist" onClick={() => setMenuOpen(false)}>Wishlist</Link>
+                            {userInfo && <Link to="/orders" onClick={() => setMenuOpen(false)}>Orders</Link>}
+                            {userInfo?.role === 'admin' && (
+                                <div className="admin-nav-menu">
+                                    <button className="admin-nav-button">
+                                        Admin
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div className="admin-nav-dropdown">
+                                        <Link to="/admin/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link>
+                                        <Link to="/admin/categories" onClick={() => setMenuOpen(false)}>Categories</Link>
+                                        <Link to="/admin/products" onClick={() => setMenuOpen(false)}>Products</Link>
+                                        <Link to="/admin/orders" onClick={() => setMenuOpen(false)}>Orders</Link>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </nav>
 
                     <div className="header-actions">

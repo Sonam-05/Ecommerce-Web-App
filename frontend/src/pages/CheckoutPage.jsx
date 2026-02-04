@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { createOrder } from '../store/slices/orderSlice';
+import { clearCart } from '../store/slices/cartSlice';
 import { getProfile } from '../store/slices/authSlice';
+import { fetchNotifications } from '../store/slices/notificationSlice';
+import Loader from '../components/Loader';
 import './CheckoutPage.css';
 
 const CheckoutPage = () => {
@@ -13,14 +16,17 @@ const CheckoutPage = () => {
 
     const [addresses, setAddresses] = useState([]);
     const [selectedAddress, setSelectedAddress] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        setLoading(true);
         dispatch(getProfile()).then((result) => {
             if (result.payload?.addresses) {
                 setAddresses(result.payload.addresses);
                 const defaultAddr = result.payload.addresses.find(a => a.isDefault);
                 if (defaultAddr) setSelectedAddress(defaultAddr);
             }
+            setLoading(false);
         });
     }, [dispatch]);
 
@@ -45,8 +51,13 @@ const CheckoutPage = () => {
             paymentMethod: 'COD'
         };
 
-        dispatch(createOrder(orderData)).then(() => {
-            navigate('/orders');
+        dispatch(createOrder(orderData)).then((res) => {
+            if (!res.error) {
+                dispatch(clearCart());
+                // Fetch notifications immediately to show the new order notification
+                dispatch(fetchNotifications());
+                navigate('/orders');
+            }
         });
     };
 
@@ -58,7 +69,9 @@ const CheckoutPage = () => {
                 <div className="checkout-content">
                     <div className="checkout-section">
                         <h2>Select Shipping Address</h2>
-                        {addresses.length === 0 ? (
+                        {loading ? (
+                            <Loader variant="dots" message="Loading addresses..." />
+                        ) : addresses.length === 0 ? (
                             <p>No addresses found. Please add an address in your profile.</p>
                         ) : (
                             <div className="address-list">

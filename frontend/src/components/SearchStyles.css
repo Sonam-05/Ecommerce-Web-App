@@ -3,7 +3,10 @@
     position: relative;
     flex: 1;
     max-width: 500px;
-    margin: 0 2rem;
+    margin: 0 1.5rem;
+    min-width: 200px;
+    /* Ensuring search bar remains usable */
+    transition: all 0.3s ease;
 }
 
 .search-form {
@@ -98,8 +101,21 @@
     font-weight: 600;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .search-container {
-        display: none;
+        margin: 0 0.5rem;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .search-input {
+        padding: 0.6rem 0.75rem 0.6rem 2.5rem;
+        font-size: 0.8rem;
+    }
+
+    .search-icon {
+        left: 0.75rem;
+        width: 16px;
+        height: 16px;
     }
 }

@@ -6,6 +6,7 @@ import { addToCart } from '../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
 import ProductCard from '../components/ProductCard';
 import Loader from '../components/Loader';
+import ProductImageGallery from '../components/ProductImageGallery';
 import './ProductDetailPage.css';
 
 const ProductDetailPage = () => {
@@ -53,7 +54,7 @@ const ProductDetailPage = () => {
             <div className="container">
                 <div className="product-detail">
                     <div className="product-images">
-                        <img src={product.images?.[0] || '/placeholder.png'} alt={product.name} />
+                        <ProductImageGallery images={product.images} productName={product.name} />
                     </div>
 
                     <div className="product-details">
