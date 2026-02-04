@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://sonam-ecommerce-frontend.vercel.app/api',
+    baseURL: 'https://sonam-ecommerce-backend.vercel.app/api',
     headers: {
         'Content-Type': 'application/json'
     }
