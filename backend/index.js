@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // CORS middleware
 app.use(cors(
     {
-        origin: ["https://sonam-ecommerce.vercel.app"],
+        origin: ["https://sonam-ecommerce-frontend.vercel.app"],
         methods: ["POST", "GET", "PUT", "DELETE"],
         credentials: true
     }
